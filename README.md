@@ -1,9 +1,9 @@
-🔒 Automated File Cleanser and Analyzer
+Automated File Cleanser and Analyzer
 
 This project is an automated solution designed for security consultants to cleanse and analyze client-provided documents. It processes various file formats, redacts sensitive information (PII, client names, logos), and uses an LLM to extract key security insights, ensuring all data is anonymized and ready for analysis.
 
 <!-- Optional: Add a screenshot of your app running -->
-✨ Features
+Features
 
     Multi-Format Support: Ingests and extracts text from .pdf, .png, .jpeg, .pptx, and more.
 
@@ -21,23 +21,28 @@ Follow these steps to set up the project on your local machine.
 
 1. Clone the repository:
 
-git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-cd your-repo-name
+> git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
+> cd your-repo-name
 
 2. Create and activate a virtual environment:
 
-# For Windows
-python -m venv venv
-.\venv\Scripts\activate
+> For Windows
+    > python -m venv venv
 
-# For macOS / Linux
-python3 -m venv venv
-source venv/bin/activate
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+    
+ > .\venv\Scripts\activate
+
+> For macOS / Linux
+  > python3 -m venv venv
+    
+ > source venv/bin/activate
+    
 
 3. Install dependencies:
 Make sure you have all the required libraries by installing from requirements.txt.
 
-pip install -r requirements.txt
+    > pip install -r requirements.txt
 
 4. Install Tesseract OCR Engine:
 This tool requires the Tesseract engine for OCR.
@@ -46,7 +51,8 @@ This tool requires the Tesseract engine for OCR.
 
     Important: Note the installation path. You may need to add it to the app.py script if it's not found automatically.
 
-🚀 How to Run the Application
+
+#How to Run the Application
 
 1. Set Your Environment Variable:
 This application requires an API key from Groq to perform the AI analysis. Get your free key from the Groq Console.
@@ -62,7 +68,7 @@ export GROQ_API_KEY="YOUR_API_KEY_HERE"
 2. Run the Streamlit App:
 In the same terminal session, run the following command:
 
-streamlit run app.py
+> streamlit run app.py
 
 A new tab will open in your browser with the running application.
 ⚙️ Technologies Used
@@ -80,3 +86,4 @@ A new tab will open in your browser with the running application.
     File Parsing: PyMuPDF, python-pptx
 
     Image Processing: OpenCV, Pillow
+
