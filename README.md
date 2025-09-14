@@ -27,7 +27,9 @@ cd your-repo-name
 
 # For Windows
 python -m venv venv
+
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+
 .\venv\Scripts\activate
 
 # For macOS / Linux
@@ -81,3 +83,4 @@ A new tab will open in your browser with the running application.
 
 
     Image Processing: OpenCV, Pillow
+
