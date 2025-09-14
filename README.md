@@ -46,7 +46,7 @@ This tool requires the Tesseract engine for OCR.
 
     Important: Note the installation path. You may need to add it to the app.py script if it's not found automatically.
 
-How to Run the Application
+#How to Run the Application
 
 1. Set Your Environment Variable:
 This application requires an API key from Groq to perform the AI analysis. Get your free key from the Groq Console.
@@ -78,5 +78,6 @@ A new tab will open in your browser with the running application.
     OCR: Google Tesseract (pytesseract)
 
     File Parsing: PyMuPDF, python-pptx
+
 
     Image Processing: OpenCV, Pillow
