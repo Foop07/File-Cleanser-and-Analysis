@@ -2,7 +2,8 @@
 
 This project is an automated solution designed for security consultants to cleanse and analyze client-provided documents. It processes various file formats, redacts sensitive information (PII, client names, logos), and uses an LLM to extract key security insights, ensuring all data is anonymized and ready for analysis.
 
-Features
+<!-- Optional: Add a screenshot of your app running -->
+✨ Features
 
     Multi-Format Support: Ingests and extracts text from .pdf, .png, .jpeg, .pptx, and more.
 
@@ -14,7 +15,7 @@ Features
 
     Tabular Summary: Presents the final, cleansed findings in a clean and easy-to-read table.
 
-Installation & Setup
+🛠️ Installation & Setup
 
 Follow these steps to set up the project on your local machine.
 
@@ -27,9 +28,6 @@ cd your-repo-name
 
 # For Windows
 python -m venv venv
-
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
-
 .\venv\Scripts\activate
 
 # For macOS / Linux
@@ -48,7 +46,7 @@ This tool requires the Tesseract engine for OCR.
 
     Important: Note the installation path. You may need to add it to the app.py script if it's not found automatically.
 
-#How to Run the Application
+🚀 How to Run the Application
 
 1. Set Your Environment Variable:
 This application requires an API key from Groq to perform the AI analysis. Get your free key from the Groq Console.
@@ -67,7 +65,7 @@ In the same terminal session, run the following command:
 streamlit run app.py
 
 A new tab will open in your browser with the running application.
- Technologies Used
+⚙️ Technologies Used
 
     Backend: Python
 
@@ -81,6 +79,4 @@ A new tab will open in your browser with the running application.
 
     File Parsing: PyMuPDF, python-pptx
 
-
     Image Processing: OpenCV, Pillow
-
