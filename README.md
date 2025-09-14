@@ -22,6 +22,7 @@ Follow these steps to set up the project on your local machine.
 ## 1. Clone the repository:
 
 > git clone [https://github.com/Foop07/File-Cleanser-and-Analysis.git](https://github.com/Foop07/File-Cleanser-and-Analysis.git)
+
 > cd your-repo-name
 
 ## 2. Create and activate a virtual environment:
@@ -90,6 +91,7 @@ A new tab will open in your browser with the running application.
     File Parsing: PyMuPDF, python-pptx
 
     Image Processing: OpenCV, Pillow
+
 
 
 
