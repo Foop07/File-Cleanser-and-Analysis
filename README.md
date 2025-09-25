@@ -73,7 +73,7 @@ export GROQ_API_KEY="YOUR_API_KEY_HERE"
 ## 2. Run the Streamlit App:
 In the same terminal session, run the following command:
 
-> streamlit run file_cleanser_analysis_app.py
+> streamlit run Frontend.py
 
 A new tab will open in your browser with the running application.
  Technologies Used
@@ -91,6 +91,7 @@ A new tab will open in your browser with the running application.
     File Parsing: PyMuPDF, python-pptx
 
     Image Processing: OpenCV, Pillow
+
 
 
 
