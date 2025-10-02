@@ -78,7 +78,9 @@ def interpret_content(text_to_analyze: str, pii_count: int) -> Dict:
         - Do not invent information if the text is nonsensical or empty.
         - Base your analysis strictly on the provided text.
         - Do not suggest "further investigation".
-        
+        - If the text seems nonsencial, don't mention it explicitly. Instead mention that the image is too low res to analyse
+        - PAY SPECIAL ATTENTION TO EXTRACTING PERSONAL NAMES AND TITLES when present in the text.
+
         Respond ONLY with a JSON object in this format: {format_instructions}
         
         **Document Text to Analyze**:
