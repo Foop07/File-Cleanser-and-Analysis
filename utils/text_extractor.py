@@ -61,10 +61,32 @@ def extract_text(uploaded_file: st.runtime.uploaded_file_manager.UploadedFile) -
         elif file_extension == '.pptx':
             text = ""
             prs = Presentation(uploaded_file)
-            for slide in prs.slides:
+            for slide_num, slide in enumerate(prs.slides, 1):
+                # Extract text from all shapes
                 for shape in slide.shapes:
-                    if hasattr(shape, "text"):
+                    # Extract text from text frames
+                    if hasattr(shape, "text") and shape.text:
                         text += shape.text + "\n"
+                    
+                    # Extract text from tables
+                    if shape.has_table:
+                        table = shape.table
+                        for row in table.rows:
+                            row_text = []
+                            for cell in row.cells:
+                                if cell.text:
+                                    row_text.append(cell.text)
+                            if row_text:
+                                text += " | ".join(row_text) + "\n"
+                    
+                    # Extract text from grouped shapes
+                    if hasattr(shape, "shapes"):
+                        for sub_shape in shape.shapes:
+                            if hasattr(sub_shape, "text") and sub_shape.text:
+                                text += sub_shape.text + "\n"
+                
+                text += "\n"  # Add spacing between slides
+            
             return {"text": text, "error": None}
 
         elif file_extension == '.xlsx':
