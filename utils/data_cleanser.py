@@ -71,26 +71,32 @@ def anonymize_text(text_to_clean: str, client_name: str) -> Tuple[str, List[Reco
         return error_message, []
 
 
-def redact_logo(main_image: Image.Image, logo_image: Image.Image) -> Image.Image:
+def detect_logo(document_image_path: str, logo_image_path: str) -> bool:
     """
-    Finds a logo within a main image and blacks it out.
+    Detect if the logo exists in the document image using template matching.
+
+    Args:
+        document_image_path (str): Path to the main document image.
+        logo_image_path (str): Path to the logo image.
+
+    Returns:
+        bool: True if logo is found, False otherwise.
     """
     try:
-        main_img_cv = np.array(main_image.convert('RGB'))
-        logo_img_cv = np.array(logo_image.convert('RGB'))
-        
-        w, h = logo_img_cv.shape[:-1]
+        doc_img = cv2.imread(document_image_path, cv2.IMREAD_COLOR)
+        logo_img = cv2.imread(logo_image_path, cv2.IMREAD_COLOR)
 
-        res = cv2.matchTemplate(main_img_cv, logo_img_cv, cv2.TM_CCOEFF_NORMED)
+        if doc_img is None or logo_img is None:
+            print("[ERROR] Could not load images. Check the paths.")
+            return False
+
+        res = cv2.matchTemplate(doc_img, logo_img, cv2.TM_CCOEFF_NORMED)
         threshold = 0.8
-        loc = np.where(res >= threshold)
-
-        for pt in zip(*loc[::-1]):
-            cv2.rectangle(main_img_cv, pt, (pt[0] + h, pt[1] + w), (0, 0, 0), -1)
-        
-        return Image.fromarray(main_img_cv)
+        loc = (res >= threshold).any()
+        return loc
 
     except Exception as e:
-        print(f"An error occurred during logo redaction: {e}")
-        return main_image
+        print(f"[ERROR] Logo detection failed: {e}")
+        return False
+    pass
 
