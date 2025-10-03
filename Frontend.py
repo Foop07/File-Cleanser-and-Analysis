@@ -1,15 +1,19 @@
+
 import streamlit as st
 import os
+import pandas as pd
 from PIL import Image
+import fitz  # PyMuPDF
+from pptx import Presentation
+from io import BytesIO
 
-# --- Import our dedicated backend modules ---
+# --- Import backend modules ---
 from utils.text_extractor import extract_text
 from utils.data_cleanser import anonymize_text
 from utils.content_interpreter import identify_client_name, interpret_content
 
 # --- UI Rendering Function ---
 def display_report(file, result):
-    """Renders a single, detailed intelligence report."""
     st.header(f"Intelligence Report: {file.name}")
 
     col1, col2 = st.columns(2)
@@ -36,11 +40,11 @@ def display_report(file, result):
 # --- Main Application UI ---
 st.set_page_config(layout="wide", page_title="Intelligent File Analyzer")
 st.title("🚀 Intelligent File Analyzer")
-st.info("Upload one or more documents. The AI will automatically identify the client, cleanse the data, and generate a detailed security report for each file.")
+st.info("Upload documents. The AI will identify the client, redact data, and generate detailed reports.")
 
 uploaded_files = st.file_uploader(
     "Upload Documents for Analysis",
-    type=['pdf', 'png', 'jpeg', 'jpg', 'pptx', 'xlsx'],
+    type=['pdf', 'png', 'jpeg', 'jpg', 'pptx', 'xlsx', 'txt', 'csv'],
     accept_multiple_files=True
 )
 
@@ -53,31 +57,134 @@ if st.button("Generate Intelligence Reports", type="primary"):
         for file in uploaded_files:
             st.markdown("---")
             with st.spinner(f"Processing {file.name}..."):
-                
-                # --- PIPELINE STEP 1: TEXT EXTRACTION ---
-                extraction_result = extract_text(file)
-                raw_text = extraction_result.get("text")
-                error = extraction_result.get("error")
+                raw_text = ""
+                df_to_save = None
+                pptx_redacted = None
+                error = None
+                ext = os.path.splitext(file.name)[1].lower()
 
-                # --- NEW: ERROR CHECK ---
-                # If the extractor returned an error, display it and skip to the next file.
+                # --- TEXT EXTRACTION ---
+                try:
+                    if ext == ".txt":
+                        raw_text = file.read().decode("utf-8")
+                    elif ext == ".csv":
+                        df = pd.read_csv(file)
+                        raw_text = df.to_csv(index=False)
+                        df_to_save = df.copy()
+                    elif ext == ".xlsx":
+                        df = pd.read_excel(file)
+                        raw_text = df.to_csv(index=False)
+                        df_to_save = df.copy()
+                    elif ext == ".pdf":
+                        doc = fitz.open(stream=file.read(), filetype="pdf")
+                        raw_text = ""
+                        for page in doc:
+                            raw_text += page.get_text()
+                    elif ext == ".pptx":
+                        prs = Presentation(file)
+                        raw_text = ""
+                        pptx_redacted = prs
+                        for slide in prs.slides:
+                            for shape in slide.shapes:
+                                if hasattr(shape, "text"):
+                                    raw_text += shape.text + "\n"
+                    else:
+                        extraction_result = extract_text(file)
+                        raw_text = extraction_result.get("text", "")
+                        error = extraction_result.get("error")
+
+                    if not raw_text.strip() and not error:
+                        error = "No text could be extracted."
+                except Exception as e:
+                    error = str(e)
+
                 if error:
                     st.error(f"**{file.name}**: Could not process file. Reason: {error}")
-                    continue # This is the key change to stop the pipeline for this file.
+                    raw_text = f"Could not extract content from {file.name}. Error: {error}"
+
+                # --- CLIENT IDENTIFICATION & ANONYMIZATION ---
+                try:
+                    client_name = identify_client_name(raw_text)
+                except Exception as e:
+                    client_name = "Unknown"
+                    st.warning(f"Could not identify client: {e}")
                 
-                # --- The rest of the pipeline only runs if there was no error ---
-                client_name = identify_client_name(raw_text)
                 st.write(f"🤖 AI identified client for **{file.name}** as: **{client_name}**")
                 
-                anonymized_text, pii_results = anonymize_text(raw_text, client_name)
-                pii_count = len(pii_results)
-                
-                analysis_result = interpret_content(anonymized_text, pii_count)
+                try:
+                    anonymized_text, pii_results = anonymize_text(raw_text, client_name)
+                    pii_count = len(pii_results)
+                except Exception as e:
+                    anonymized_text = raw_text
+                    pii_count = 0
+                    st.warning(f"Anonymization failed: {e}")
 
-                if "error" in analysis_result:
-                    st.error(f"Could not analyze {file.name}: {analysis_result['error']}")
+                # --- CONTENT INTERPRETATION ---
+                try:
+                    analysis_result = interpret_content(anonymized_text, pii_count)
+                    if "error" in analysis_result:
+                        st.error(f"Could not analyze {file.name}: {analysis_result['error']}")
+                except Exception as e:
+                    analysis_result = {}
+                    st.warning(f"Content interpretation failed: {e}")
+
+                # --- DISPLAY REPORT ---
+                display_report(file, analysis_result)
+
+                # --- DOWNLOAD BUTTON ---
+                if ext in [".xlsx", ".csv"] and df_to_save is not None:
+                    # Redact all text cells in DataFrame
+                    df_redacted = df_to_save.copy()
+                    for col in df_redacted.columns:
+                        df_redacted[col] = df_redacted[col].astype(str).apply(lambda x: anonymize_text(x, client_name)[0])
+
+                    if ext == ".xlsx":
+                        output_file_name = f"redacted_{os.path.splitext(file.name)[0]}.xlsx"
+                        df_redacted.to_excel(output_file_name, index=False)
+                        mime_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    else:
+                        output_file_name = f"redacted_{os.path.splitext(file.name)[0]}.csv"
+                        df_redacted.to_csv(output_file_name, index=False)
+                        mime_type = "text/csv"
+
+                    with open(output_file_name, "rb") as f:
+                        st.download_button(
+                            label="Download Redacted File",
+                            data=f,
+                            file_name=output_file_name,
+                            mime=mime_type
+                        )
+
+                elif ext == ".pptx" and pptx_redacted is not None:
+                    # Replace text in slides with redacted version
+                    prs = pptx_redacted
+                    for slide in prs.slides:
+                        for shape in slide.shapes:
+                            if hasattr(shape, "text"):
+                                redacted_text, _ = anonymize_text(shape.text, client_name)
+                                shape.text = redacted_text
+
+                    output_file_name = f"redacted_{os.path.splitext(file.name)[0]}.pptx"
+                    prs.save(output_file_name)
+
+                    with open(output_file_name, "rb") as f:
+                        st.download_button(
+                            label="Download Redacted File",
+                            data=f,
+                            file_name=output_file_name,
+                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        )
                 else:
-                    display_report(file, analysis_result)
-        
-        st.success("✅ Batch processing complete.")
+                    # TXT, PDF, images
+                    output_file_name = f"redacted_{os.path.splitext(file.name)[0]}.txt"
+                    with open(output_file_name, "w", encoding="utf-8") as f:
+                        f.write(anonymized_text)
+                    with open(output_file_name, "rb") as f:
+                        st.download_button(
+                            label="Download Redacted File",
+                            data=f,
+                            file_name=output_file_name,
+                            mime="text/plain"
+                        )
 
+        st.success("✅ Batch processing complete.")
